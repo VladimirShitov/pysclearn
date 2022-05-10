@@ -35,7 +35,7 @@ class CorrelationsClassifier:
         self.data_transformer = None
         self.cell_types = None
         self.classes_centroids = None
-        self.thresholds = None
+        self.thresholds = []
 
     def fit(self, X, y, negative_links=None, dimensions: Optional[int] = None):
         self.dimensions = dimensions
@@ -49,8 +49,10 @@ class CorrelationsClassifier:
             raise ValueError(f"{self.data_transform_method} is not a valid transform method")
 
         self.classes_centroids = cluster_centroids(y, transformed_data)
-        self.thresholds = learn_thresholds(y, transformed_data, self.classes_centroids,
-                                           correlation_method=self.correlation_method)
+        self.thresholds = np.array(list(
+            learn_thresholds(
+                y, transformed_data, self.classes_centroids, correlation_method=self.correlation_method).values()
+        ))
 
     def predict(self, X):
         transformed_data = self.data_transformer.transform(X)
@@ -61,10 +63,10 @@ class CorrelationsClassifier:
             max_corr = -np.inf
             best_type = None
 
-            for cell_type in self.cell_types:
-                correlation = np.corrcoef(cell, self.classes_centroids[cell_type])[0, 1]
+            for i, cell_type in enumerate(self.cell_types):
+                correlation = np.corrcoef(cell, self.classes_centroids[i])[0, 1]
 
-                if correlation > max_corr and correlation > self.thresholds[cell_type]:
+                if correlation > max_corr and correlation > self.thresholds[i]:
                     max_corr = correlation
                     best_type = cell_type
 
@@ -79,11 +81,9 @@ class CorrelationsClassifier:
 class CalibratedThresholdsClassifier:
     UNCERTAIN_CLASS_NAME = -1
 
-    def __init__(self, base_estimator, cv=None, calibration_method="sigmoid", correlation_method="pearson",
-                 percentile=1):
+    def __init__(self, base_estimator, cv=None, calibration_method="sigmoid", percentile=1):
         self.base_estimator = base_estimator
         self.calibration_method = calibration_method
-        self.correlation_method = correlation_method
         self.cv = cv
         self.percentile = percentile
 
