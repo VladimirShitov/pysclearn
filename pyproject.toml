@@ -5,7 +5,11 @@ description = "A tool for single-cell well generalized assignment"
 authors = ["Vladimir Shitov <vladimirshitov98@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.11"
+numpy = "^1.22.3"
+matplotlib = "^3.5.2"
+pandas = "^1.4.2"
+icecream = "^2.1.2"
 
 [tool.poetry.dev-dependencies]
 
