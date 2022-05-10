@@ -7,7 +7,7 @@ from sclearn.preprocessing import DCA
 from sclearn.utils import cluster_centroids, learn_thresholds
 
 
-class CorrelationsPredictor:
+class CorrelationsClassifier:
     UNCERTAIN_CLASS_NAME = -1
 
     def _fit_DCA(self, X, y, negative_links):
