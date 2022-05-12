@@ -61,21 +61,23 @@ class CorrelationsClassifier:
 
         for cell in transformed_data:
             max_corr = -np.inf
-            best_type = None
+            best_type_idx = None
 
             for i, cell_type in enumerate(self.cell_types):
-                correlation = np.corrcoef(cell, self.classes_centroids[i])[0, 1]
+                correlation = np.corrcoef(cell, self.classes_centroids[cell_type])[0, 1]
 
                 if correlation > max_corr and correlation > self.thresholds[i]:
                     max_corr = correlation
-                    best_type = cell_type
+                    best_type_idx = i
 
-            if best_type is None:
+            if best_type_idx is None:
                 best_type = self.UNCERTAIN_CLASS_NAME
+            else:
+                best_type = self.cell_types[best_type_idx]
 
             predicted_cell_types.append(best_type)
 
-        return np.array(predicted_cell_types)
+        return np.array(predicted_cell_types).astype(self.cell_types.dtype)
 
 
 class CalibratedThresholdsClassifier:
@@ -96,6 +98,7 @@ class CalibratedThresholdsClassifier:
     def fit(self, X, y):
         self.cell_types = np.unique(y)
         self.calibrated_classifier.fit(X, y)
+
         probabilities = self.calibrated_classifier.predict_proba(X)
 
         for cell_type in self.cell_types:
@@ -110,7 +113,7 @@ class CalibratedThresholdsClassifier:
         return self.calibrated_classifier.predict_proba(X)
 
     def predict(self, X):
-        predicted_cell_types = np.array([self.UNCERTAIN_CLASS_NAME] * X.shape[0])
+        predicted_cell_types = np.array([self.UNCERTAIN_CLASS_NAME] * X.shape[0]).astype(self.cell_types.dtype)
 
         probabilities = self.predict_proba(X)
         best_classes = probabilities.argmax(axis=1)
@@ -121,4 +124,4 @@ class CalibratedThresholdsClassifier:
         prob_exceeding_threshold = best_class_probs > self.thresholds[best_classes]
         predicted_cell_types[prob_exceeding_threshold] = self.cell_types[best_classes][prob_exceeding_threshold]
 
-        return predicted_cell_types
+        return predicted_cell_types.astype(self.cell_types.dtype)
