@@ -36,10 +36,12 @@ class CorrelationsClassifier:
         self.cell_types = None
         self.classes_centroids = None
         self.thresholds = []
+        self.y_type = None  # Save type of the classes to return an array of the same type. Avoids errors in metrics
 
     def fit(self, X, y, negative_links=None, dimensions: Optional[int] = None):
         self.dimensions = dimensions
         self.cell_types = np.unique(y)
+        self.y_type = y.dtype
 
         if self.data_transform_method == "DCA":
             transformed_data = self._fit_DCA(X, y, negative_links)
@@ -61,21 +63,23 @@ class CorrelationsClassifier:
 
         for cell in transformed_data:
             max_corr = -np.inf
-            best_type = None
+            best_type_idx = None
 
             for i, cell_type in enumerate(self.cell_types):
-                correlation = np.corrcoef(cell, self.classes_centroids[i])[0, 1]
+                correlation = np.corrcoef(cell, self.classes_centroids[cell_type])[0, 1]
 
                 if correlation > max_corr and correlation > self.thresholds[i]:
                     max_corr = correlation
-                    best_type = cell_type
+                    best_type_idx = i
 
-            if best_type is None:
+            if best_type_idx is None:
                 best_type = self.UNCERTAIN_CLASS_NAME
+            else:
+                best_type = self.cell_types[best_type_idx]
 
             predicted_cell_types.append(best_type)
 
-        return np.array(predicted_cell_types)
+        return np.array(predicted_cell_types).astype(self.y_type)
 
 
 class CalibratedThresholdsClassifier:
