@@ -100,6 +100,7 @@ class CalibratedThresholdsClassifier:
     def fit(self, X, y):
         self.cell_types = np.unique(y)
         self.calibrated_classifier.fit(X, y)
+
         probabilities = self.calibrated_classifier.predict_proba(X)
 
         for cell_type in self.cell_types:
@@ -114,7 +115,7 @@ class CalibratedThresholdsClassifier:
         return self.calibrated_classifier.predict_proba(X)
 
     def predict(self, X):
-        predicted_cell_types = np.array([self.UNCERTAIN_CLASS_NAME] * X.shape[0])
+        predicted_cell_types = np.array([self.UNCERTAIN_CLASS_NAME] * X.shape[0]).astype(self.cell_types.dtype)
 
         probabilities = self.predict_proba(X)
         best_classes = probabilities.argmax(axis=1)
@@ -125,4 +126,4 @@ class CalibratedThresholdsClassifier:
         prob_exceeding_threshold = best_class_probs > self.thresholds[best_classes]
         predicted_cell_types[prob_exceeding_threshold] = self.cell_types[best_classes][prob_exceeding_threshold]
 
-        return predicted_cell_types
+        return predicted_cell_types.astype(self.cell_types.dtype)
