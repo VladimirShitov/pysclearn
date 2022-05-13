@@ -8,7 +8,7 @@ from sclearn.utils import cluster_centroids, learn_thresholds
 
 
 class CorrelationsClassifier:
-    UNCERTAIN_CLASS_NAME = -1
+    UNCERTAIN_CLASS_NAME = "unassigned"
 
     def _fit_DCA(self, X, y, negative_links):
         self.data_transformer = DCA(self.dimensions, self.noise_std, self.debug)
@@ -77,7 +77,7 @@ class CorrelationsClassifier:
 
             predicted_cell_types.append(best_type)
 
-        return np.array(predicted_cell_types).astype(self.cell_types.dtype)
+        return np.array(predicted_cell_types).astype(str)
 
 
 class CalibratedThresholdsClassifier:
@@ -124,4 +124,4 @@ class CalibratedThresholdsClassifier:
         prob_exceeding_threshold = best_class_probs > self.thresholds[best_classes]
         predicted_cell_types[prob_exceeding_threshold] = self.cell_types[best_classes][prob_exceeding_threshold]
 
-        return predicted_cell_types.astype(self.cell_types.dtype)
+        return predicted_cell_types.astype(str)
